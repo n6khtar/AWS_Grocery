@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    container_name: grocerymate_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: grocery_user
+      POSTGRES_PASSWORD: grocery_test
+      POSTGRES_DB: grocerymate_db
+    ports:
+      - "5432:5432"            # Expose PostgreSQL on host port 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data   # Persist data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U grocery_user -d grocerymate_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    container_name: grocerymate_app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # These will override any values in .env
+      POSTGRES_USER: grocery_user
+      POSTGRES_PASSWORD: grocery_test
+      POSTGRES_DB: grocerymate_db
+      POSTGRES_HOST: db          # Important: use service name, not localhost
+      POSTGRES_URI: postgresql://grocery_user:grocery_test@db:5432/grocerymate_db
+      JWT_SECRET_KEY: "your-super-secret-key-change-me"
+      FLASK_ENV: development
+    volumes:
+      # Optional: mount code for live reload (development only)
+      - ./:/app
+
+volumes:
+  postgres_data:
