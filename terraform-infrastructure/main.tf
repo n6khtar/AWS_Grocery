@@ -17,11 +17,10 @@ resource "aws_security_group" "ec2_sg" {
 
   # Allow HTTP (Port 80) from anywhere
 ingress {
-    description = "Allow Flask"
     from_port   = 5000
     to_port     = 5000
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] # This opens the door to the whole world
   }
 
   # Allow SSH (Port 22) from anywhere (Note: In production, limit this to your IP!)
