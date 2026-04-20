@@ -1,102 +1,62 @@
-import { useEffect, useState } from 'react';
+import React from 'react';
 import './App.css';
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
-import Home from './Component/Home/Home';
-import AOS from 'aos';
-import 'aos/dist/aos.css';
-import Auth from './Component/Auth/Auth';
-import ProductStore from './Component/ProductStore/ProductStore';
-import Header from './Component/Header/Header';
-import Navbar from './Component/Navbar/Navbar';
-import Footer from './Component/Footer/Footer';
-import Checkout from './Component/Checkout/Checkout';
-import axios from 'axios';
-import ProtectedRoute from './Component/ProtectedRoute';
-import ProductDetail from './Component/ProductDetail/ProductDetail';
-import { API_BASE_URL } from './config';
-
-
-
-const AppContent = ({ products, isFav, basket, setBasket }) => {
-  const location = useLocation();
-  const hideHeaderRoutes = ['/auth']; // Add any routes where you don't want to show the header
-
-  return (
-    <>
-      {!hideHeaderRoutes.includes(location.pathname) && (
-        <>
-          <Header products={products} />
-          <Navbar />
-        </>
-      )}
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/store" element={<ProductStore products={products} isFav={false} basket={basket} setBasket={setBasket} />} />
-        <Route
-          path="/store/favs"
-          element={
-            <ProtectedRoute>
-              <ProductStore products={products} isFav={true} basket={basket} setBasket={setBasket} />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/product/:productId" element={<ProductDetail />} />
-        <Route
-          path="/checkout"
-          element={
-            <ProtectedRoute>
-              <Checkout products={products} basket={basket} setBasket={setBasket} />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-      {!hideHeaderRoutes.includes(location.pathname) && <Footer />}
-    </>
-  );
-};
 
 function App() {
-  const [products, setProducts] = useState([]);
-  const [basket, setBasket] = useState([]);
+  // --- AWS INTEGRATION START ---
+  const applyAWSDiscount = async (currentPrice) => {
+    // Your verified Python Lambda URL
+    const lambdaUrl = 'https://ueeuma5aksv4ox4xj4vi4bjyee0daurr.lambda-url.eu-central-1.on.aws/';
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await axios.get(`${API_BASE_URL}/api/products/all_products`);
-        setProducts(response.data);
-      } catch (error) {
-        console.error(error);
-      }
-    };
+    try {
+      const response = await fetch(lambdaUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ price: currentPrice })
+      });
 
-    const fetchBasket = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`${API_BASE_URL}/api/me/basket`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        console.log("Basket data", response.data);
-        setBasket(response.data);
-      } catch (error) {
-        console.error('Failed to fetch basket:', error);
-      }
-    };
+      if (!response.ok) throw new Error('Network response was not ok');
 
-    fetchProducts();
-    fetchBasket();
-    AOS.init();
-    AOS.refresh();
-  }, []);
+      const data = await response.json();
+
+      // Verification Alert
+      alert(`${data.message}\nOriginal Price: $${currentPrice}\nNew Price: $${data.discountedPrice}`);
+
+    } catch (error) {
+      console.error("AWS Integration Error:", error);
+      alert("Failed to connect to AWS Python Lambda.");
+    }
+  };
+  // --- AWS INTEGRATION END ---
 
   return (
-    <Router>
-      <div className='App'>
-        <AppContent products={products} basket={basket} setBasket={setBasket} />
-      </div>
-    </Router>
+    <div className="App">
+      <header className="App-header">
+        <h1>AWS Grocery Store</h1>
+
+        <p>Welcome to the Cloud Integrated Store!</p>
+
+        {/* --- AWS BUTTON START --- */}
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+          <button
+              onClick={() => applyAWSDiscount(100)}
+              style={{
+                backgroundColor: '#FF9900',
+                color: 'white',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                border: 'none',
+                boxShadow: '0px 4px 6px rgba(0,0,0,0.1)'
+              }}
+          >
+            Apply AWS Cloud Discount (10% Off)
+          </button>
+        </div>
+        {/* --- AWS BUTTON END --- */}
+
+      </header>
+    </div>
   );
 }
 
