@@ -12,11 +12,24 @@ The application follows a standard three-tier cloud architecture model:
 2. Compute Tier: The Flask application runs securely inside a Docker Container hosted on Amazon Linux EC2 instances. The container utilizes network host to seamlessly integrate with the EC2 network stack.
 3. Database Tier: Relational data (users, products, orders) is managed by a private Amazon RDS (PostgreSQL) instance.
 4. Storage Tier: Static assets and user-uploaded media (e.g., avatars) are stored dynamically in an Amazon S3 bucket.
-### 🤖 Infrastructure as Code (IaC)
-The entire environment is codified using **Terraform**. This allows for:
-* **Reproducibility:** Spin up the exact same environment in seconds.
-* **Security:** Network isolation and IAM roles are defined in code.
-* **Documentation:** The `/terraform` directory serves as the source of truth for the cloud architecture.
+5. Logic Tier:** An **AWS Lambda** function handles the "Cloud Discount" logic, triggered by the React frontend via a secure **Lambda Function URL**.
+
+## 🤖 Infrastructure as Code (IaC)
+The entire environment is codified using **Terraform**, ensuring the environment is 100% reproducible and portable.
+
+### Key IaC Improvements:
+* **Network Isolation:** Defined a custom VPC with Public Subnets (Compute) and Private Subnets (RDS) using explicit **Route Tables**.
+* **Security Groups:** Implemented "Least Privilege" access. The RDS instance only accepts traffic from the EC2 Security Group on port 5432.
+* **Serverless Logic:** The AWS Lambda function is fully codified, including IAM execution roles and Public Function URL configuration.
+* **IAM Instance Profiles:** EC2 instances are granted S3 and Lambda access via IAM Roles, eliminating the need for hardcoded AWS Access Keys.
+* **Zero Hardcoding:** All environment-specific values (AMI IDs, CIDR blocks, naming conventions) are managed via `variables.tf`.
+
+## ⚡ Featured Cloud Integration: AWS Discount Service
+To demonstrate cloud-native automation, I integrated a **Python-based AWS Lambda** function.
+
+* **Function:** `grocerymate-discount-service`
+* **Trigger:** A dedicated "Apply AWS Discount" button in the React frontend.
+* **Impact:** Decouples business logic (pricing/discounts) from the core application, allowing for independent scaling and updates without redeploying the main server.
 
 ## ```🚀 Key Milestones & Evolution```
 1. Manual Provisioning: Initial deployment on a bare-metal Amazon Linux instance, configuring Python, Git, and PostgreSQL manually.
@@ -93,6 +106,16 @@ To deploy this architecture, you will need:
         http://<EC2-PUBLIC-IP>:5000
 
    Create a new user and upload an avatar to verify that the PostgreSQL integration and S3 storage routing are functioning correctly.
+
+**6. Provision Infrastructure**
+
+Navigate to the terraform directory and initialize the environment:
+
+      Powershell
+      
+      cd terraform
+      terraform init
+      terraform apply -var="db_username=your_user" -var="db_password=your_password"
 
 ## ```🔮 Next Steps: Scaling & Automation Roadmap```
 
