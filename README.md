@@ -56,11 +56,11 @@ To deploy this architecture, you will need:
 
    First, clone the repository and build the container image.
 
-        PowerShell
+      PowerShell
         
-        git clone https://github.com/your-github-username/AWS_grocery.git
-        cd AWS_grocery/backend
-        docker build -t grocerymate
+      git clone https://github.com/your-github-username/AWS_grocery.git
+      cd AWS_grocery/backend
+      docker build -t grocerymate
 
 **2. Infrastructure Provisioning**
    
@@ -111,11 +111,11 @@ To deploy this architecture, you will need:
 
 Navigate to the terraform directory and initialize the environment:
 
-      Powershell
+         Powershell
       
-      cd terraform
-      terraform init
-      terraform apply -var="db_username=your_user" -var="db_password=your_password"
+         cd terraform
+         terraform init
+         terraform apply -var="db_username=your_user" -var="db_password=your_password"
 
 ## ```🔮 Next Steps: Scaling & Automation Roadmap```
 
