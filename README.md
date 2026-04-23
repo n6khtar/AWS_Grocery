@@ -12,6 +12,11 @@ The application follows a standard three-tier cloud architecture model:
 2. Compute Tier: The Flask application runs securely inside a Docker Container hosted on Amazon Linux EC2 instances. The container utilizes network host to seamlessly integrate with the EC2 network stack.
 3. Database Tier: Relational data (users, products, orders) is managed by a private Amazon RDS (PostgreSQL) instance.
 4. Storage Tier: Static assets and user-uploaded media (e.g., avatars) are stored dynamically in an Amazon S3 bucket.
+### 🤖 Infrastructure as Code (IaC)
+The entire environment is codified using **Terraform**. This allows for:
+* **Reproducibility:** Spin up the exact same environment in seconds.
+* **Security:** Network isolation and IAM roles are defined in code.
+* **Documentation:** The `/terraform` directory serves as the source of truth for the cloud architecture.
 
 ## ```🚀 Key Milestones & Evolution```
 1. Manual Provisioning: Initial deployment on a bare-metal Amazon Linux instance, configuring Python, Git, and PostgreSQL manually.
