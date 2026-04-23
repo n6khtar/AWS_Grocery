@@ -140,3 +140,59 @@ resource "aws_s3_bucket" "avatars" {
 }
 
 resource "random_id" "id" { byte_length = 4 }
+
+# --- LAMBDA INFRASTRUCTURE ---
+
+# 1. Zip the code automatically
+data "archive_file" "lambda_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/../lambda"
+  output_path = "${path.module}/lambda_function.zip"
+}
+
+# 2. IAM Role for Lambda
+resource "aws_iam_role" "lambda_role" {
+  name = "${var.project_name}-lambda-exec-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = { Service = "lambda.amazonaws.com" }
+    }]
+  })
+}
+
+# 3. The Function
+resource "aws_lambda_function" "discount_lambda" {
+  filename         = data.archive_file.lambda_zip.output_path
+  function_name    = "${var.project_name}-discount-service"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "lambda_function.lambda_handler" # File name . Function name
+  runtime          = "python3.9"
+  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+}
+
+# 4. THE MAGIC PIECE: Lambda Function URL (Replaces your manual URL)
+resource "aws_lambda_function_url" "lambda_url" {
+  function_name      = aws_lambda_function.discount_lambda.function_name
+  authorization_type = "NONE" # Publicly accessible for the frontend
+
+  cors {
+    allow_origins     = ["*"]
+    allow_methods     = ["POST"]
+    allow_headers     = ["content-type"]
+    expose_headers    = ["keep-alive", "date"]
+    max_age           = 86400
+  }
+}
+
+# 5. Permission to allow public access to the URL
+resource "aws_lambda_permission" "allow_public_url" {
+  statement_id           = "AllowPublicURLAccess"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.discount_lambda.function_name
+  principal              = "*"
+  function_url_auth_type = "NONE"
+}
